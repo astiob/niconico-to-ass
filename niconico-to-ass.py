@@ -367,7 +367,8 @@ class Chat:
 							#	text.append()
 							#	text.append('「' + questions + '」')
 							#self.text = transcode_html(''.join(text))
-				elif self.command in {'play', 'jump', 'disconnect', 'hb'}:
+				elif self.command in {'play', 'jump', 'redirect',
+				                      'disconnect', 'hb'}:
 					# Ignore
 					raise NotImplementedError
 				else:
