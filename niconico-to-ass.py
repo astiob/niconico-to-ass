@@ -22,7 +22,6 @@
 #         metrics in different fonts by modifying the \move coordinates appropriately.
 #   * Out of curiosity, check how NicoNico scales font size.
 #   * Extensively check font fallback.
-#   * Get MS PGothic from Windows 10.
 # Epic fix for fonts:
 #   * Generate a single font that contains exactly all glyphs necessary
 #     for the comments as vectorized by GDI.
