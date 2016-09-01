@@ -485,11 +485,11 @@ else:
 							bounds.readline().split()[1:])))
 
 def time(s):
-	cs = max(s, 0) * 100
+	cs = round(max(s, 0) * 100)
 	s, cs = divmod(cs, 100)
 	m, s = divmod(s, 60)
 	h, m = divmod(m, 60)
-	return '%d:%02d:%02d.%02d' % (h, m, s, round(cs))
+	return '%d:%02d:%02d.%02d' % (h, m, s, cs)
 
 def color(color):
 	return '&H%02X%02X%02X' % (color & 0xff, color >> 8 & 0xff, color >> 16)
