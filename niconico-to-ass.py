@@ -1219,6 +1219,12 @@ for chat in chats:
 					# will be correct either...
 					unsupported.add('lone')
 				font_name = 'Arial'
+		elif c == '\u263A':  # WHITE SMILING FACE
+			if font is not None and font_name == 'MS PGothic':
+				# WTF, Windows
+				pass
+			else:
+				font_name = 'Arial'
 		else:
 			for font_name, (style, extra_font, sizes) in FONTS.items():
 				if extra_font.get_char_index(c):
