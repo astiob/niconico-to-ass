@@ -79,6 +79,7 @@ parser.add_argument('file', type=argparse.FileType('r'),
 args = parser.parse_args()
 
 unsupported = set()
+unsupported_commands = set()
 
 # This is the time the gate is opened
 START_TIME = int(datetime(2016, 2, 11, 21, 50, tzinfo=pytz.timezone('Asia/Tokyo')).timestamp())
@@ -329,6 +330,7 @@ class Chat:
 					print('This file contains commands that I cannot handle.',
 					      file=sys.stderr)
 					unsupported.add('commands')
+					unsupported_commands.add('se')
 			if text.startswith('/'):
 				self.command, *args = text[1:].split(' ')
 				if self.command == 'perm':
@@ -374,6 +376,7 @@ class Chat:
 						      'that I cannot handle.',
 						      file=sys.stderr)
 						unsupported.add('commands')
+						unsupported_commands.add(self.command)
 					raise NotImplementedError
 			else:
 				self.command = 'perm'
@@ -1350,6 +1353,10 @@ for chat in chats:
 	print('Dialogue: 0,%s,%s,%s,%s,0,0,0,,%s%s' %
 	      (time(chat.vstart), time(chat.vend),
 	       style, chat.user_id, overrides, text))
+
+if unsupported_commands:
+	print('Unhandled commands:', ', '.join(unsupported_commands),
+	      file=sys.stderr)
 
 if PASS == 0:
 	for font_name, font_chars in chars.items():
