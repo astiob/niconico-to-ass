@@ -1341,7 +1341,7 @@ for chat in chats:
 	for i in range(len(text)):
 		if text[i].startswith(r'{\r' + style):
 			text[i] = r'{\r' + text[i][4:]
-	if re.match(r'^\{\\r(?![ap])', text[0]):
+	if re.match(r'^\{\\r(?![ag])', text[0]):
 		text[0] = '{' + text[0][3:]
 	overrides.append(text[0][1:-1])
 	
