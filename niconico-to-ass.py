@@ -836,7 +836,7 @@ class TransformedSqrt2(numbers.Real):
 	def __neg__(self):
 		return TransformedSqrt2(-self.coef, -self.offset)
 	def _newton(self, round):
-		"""X.newton(round)
+		"""X._newton(round)
 
 Find round(X.coef * sqrt(2) + X.offset) using the Newton-Raphson method."""
 		a, b = self.coef, self.offset
