@@ -92,11 +92,7 @@ def randint(a, b):
 
 def escape(text):
 	# Break accidental escape sequences by inserting a zero-width space
-	text = re.sub(r'\\([Nnh{}])', '\\\u200b\\1', text)
-	# Preserve leading and trailing spaces
-	# (let's hope the glyphs are the same!)
-	text = re.sub(r'^ | $', r'\h', text)
-	return text
+	return re.sub(r'\\([Nnh{}])', '\\\u200b\\1', text)
 
 class HTMLTranscoder(HTMLParser):
 	def __init__(self):
@@ -115,14 +111,7 @@ class HTMLTranscoder(HTMLParser):
 			# Repeated attribute names
 			self._unsupported()
 			attrs = {}
-		if tag == 'br':
-			# TOOD: apply \h
-			#for i in range(len(self.ass) - 1, -1, -1):
-			#	if 
-			self.ass.append(r'\N')
-			if attrs:
-				self._unsupported()
-		elif tag == 'b':
+		if tag == 'b':
 			self.ass.append(r'{\b1}')
 			if attrs:
 				self._unsupported()
@@ -141,9 +130,19 @@ class HTMLTranscoder(HTMLParser):
 				self.handle_comment(attrs['href'])
 				if attrs.keys() - {'href', 'target'}:
 					self._unsupported()
-		#elif tag == 'font':
-		#	if 'face' in attrs:
-		#		self.ass.append(r'{\fn%s}' % attrs[face])
+		elif tag == 'font':
+			# if 'face' in attrs:
+			# 	if '}' not in attrs['face'] and '\\' not in attrs['face']:
+			# 		self.ass.append(r'{\fn%s}' % attrs['face'])
+			# 		del attrs['face']
+			if 'color' in attrs:
+				color = attrs['color']
+				if re.match(r'^#[0-9A-Fa-f]{6}$', color):
+					color = color[5:7] + color[3:5] + color[1:3]
+					self.ass.append(r'{\c%s}' % color)
+					del attrs['color']
+			if attrs:
+				self._unsupported()
 		else:
 			self._unsupported()
 	def handle_endtag(self, tag):
@@ -154,6 +153,8 @@ class HTMLTranscoder(HTMLParser):
 		elif tag == 'u':
 			self.ass.append(r'{\u0}')
 		elif tag == 'a':
+			pass
+		elif tag == 'font':
 			pass
 		else:
 			self._unsupported()
@@ -174,17 +175,18 @@ class HTMLTranscoder(HTMLParser):
 
 def transcode_html(text):
 	lines = text.split('<br>')
-	if any('<' in line for line in lines):
-		if 'html' not in unsupported:
-			print('This file contains HTML that I cannot handle. '
-			      'It will be left as is.',
-			      file=sys.stderr)
-			unsupported.add('html')
-	return r'\N'.join(escape(html.unescape(line)) for line in lines)
-	#transcoder = HTMLTranscoder()
-	#transcoder.feed(text)
-	#transcoder.close()
-	#return ''.join(transcoder.ass)
+	ass = []
+	for line in lines:
+		transcoder = HTMLTranscoder()
+		transcoder.feed(line)
+		transcoder.close()
+		line = ''.join(transcoder.ass)
+		# Preserve leading and trailing spaces
+		# (let's hope the glyphs are the same!)
+		line = re.sub(r'^((?:\{[^}]*\})*) ', r'\1\h', line)
+		line = re.sub(r' ((?:\{[^}]*\})*)$', r'\h\1', line)
+		ass.append(line)
+	return r'\N'.join(ass)
 
 def parse_args(string):
 	for match in re.finditer(r'(?s)("(?:[^"\\]|\\.)*"?|[^ \t"](?:[^ \t\\]|\\.)*)', string):
