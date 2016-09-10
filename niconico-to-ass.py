@@ -227,12 +227,12 @@ def transcode_html(text):
 def tidy_ass(text, font_name):
 	braces = problematic_braces = False
 	components = []
-	for match in re.finditer(r'(?s)\\\{|(?:\{[^}]*\})+|.', text):
+	for match in re.finditer(r'(?s)\\\{|(?:\{[^}]*\})+|[^{\\]+|.', text):
 		c = match.group()
 		if c.startswith('{'):
 			c = c.replace('}{', '')
 			problematic_braces |= braces
-		elif c == '}':
+		elif '}' in c:
 			problematic_braces |= braces
 		elif c == r'\{':
 			braces = True
