@@ -26,7 +26,6 @@
 #   * Generate a single font that contains exactly all glyphs necessary
 #     for the comments as vectorized by GDI.
 # Not applicable to this specific Japanese comment XML:
-#   * Fix { ... } in comments, not just { ...
 #   * Fix braces in yugi comments too.
 # Figured out (I think) but impossible to replicate in ASS without manually vectorizing text:
 #   * BevelFilter(distance: 1,
@@ -1318,6 +1317,8 @@ for chat in chats:
 			text.append('{%s}' % override)
 			problematic_braces |= braces
 			font = extra_font
+		elif c == '}':
+			problematic_braces |= braces
 		if c == r'\{':
 			braces = True
 		text.append(c)
@@ -1326,8 +1327,8 @@ for chat in chats:
 		continue
 	if problematic_braces:
 		if 'braces' not in unsupported:
-			print('This file contains "{" in comments before font '
-			      'changes. They will appear as "\\" in VSFilter.',
+			print('This file contains "{" in comments before font changes '
+			      'or before "}". They will appear as "\\" in VSFilter.',
 			      file=sys.stderr)
 			unsupported.add('braces')
 	for i in range(len(text) - 1, -1, -1):
