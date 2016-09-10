@@ -25,8 +25,6 @@
 # Epic fix for fonts:
 #   * Generate a single font that contains exactly all glyphs necessary
 #     for the comments as vectorized by GDI.
-# Not applicable to this specific Japanese comment XML:
-#   * Fix braces in yugi comments too.
 # Figured out (I think) but impossible to replicate in ASS without manually vectorizing text:
 #   * BevelFilter(distance: 1,
 #                 angle: 45,
@@ -225,6 +223,35 @@ def transcode_html(text):
 		line = re.sub(r' ((?:\{[^}]*\})*)$', r'\h\1', line)
 		ass.append(line)
 	return r'\N'.join(ass)
+
+def tidy_ass(text, font_name):
+	braces = problematic_braces = False
+	components = []
+	for match in re.finditer(r'(?s)\\\{|(?:\{[^}]*\})+|.', text):
+		c = match.group()
+		if c.startswith('{'):
+			c = c.replace('}{', '')
+			problematic_braces |= braces
+		elif c == '}':
+			problematic_braces |= braces
+		elif c == r'\{':
+			braces = True
+		components.append(c)
+	if problematic_braces:
+		if 'braces' not in unsupported:
+			print('This file contains "{" in comments before font changes '
+			      'or before "}". They will appear as "\\" in VSFilter.',
+			      file=sys.stderr)
+			unsupported.add('braces')
+		chars[font_name].add('\\')
+	for i in range(len(components) - 1, -1, -1):
+		if components[i].endswith('}'):
+			break
+		elif components[i] == r'\{':
+			components[i] = '{'
+	if components[-1].startswith('{'):
+		del components[-1]
+	return ''.join(components)
 
 def parse_args(string):
 	for match in re.finditer(r'(?s)("(?:[^"\\]|\\.)*"?|[^ \t"](?:[^ \t\\]|\\.)*)', string):
@@ -1111,7 +1138,6 @@ for chat in chats:
 		if PASS <= 1:
 			chat.vstart, chat.vend = 0, 10
 		if chat.command == 'perm' or chat.text:
-			chars['MS PGothic'].update(chat.text.replace(r'\N', '').replace(r'\h', '\xa0'))
 			# FIXME: go from hardcoded sizes and coordinates to honoring WIDTH and HEIGHT
 			print(r'Dialogue: 2,%s,%s,b,,0,0,0,,{\pos(4368,364)\p1}m 0 0 l 8736 0 8736 728 0 728' %
 			      (time(chat.vstart), time(chat.vend)))
@@ -1122,8 +1148,10 @@ for chat in chats:
 			override = r'\pos(%s,364)' % number((672 - chat.width * scale) * 13 / 2)
 			if scale != Fraction('0.99'):
 				override += r'\fscx{0}\fscy{0}'.format(number(scale * 100))
-			print(r'Dialogue: 2,%s,%s,y,,0,0,0,,{%s}%s' %
-			      (time(chat.vstart), time(chat.vend), override, chat.text))
+			text = tidy_ass('{%s}%s' % (override, chat.text), 'MS PGothic')
+			chars['MS PGothic'].update(text.replace(r'\N', '').replace(r'\h', '\xa0'))
+			print(r'Dialogue: 2,%s,%s,y,,0,0,0,,%s' %
+			      (time(chat.vstart), time(chat.vend), text))
 		if chat.command == 'vote':
 			if chat.mode != 'stop':
 				if PASS <= 1:
@@ -1175,11 +1203,12 @@ for chat in chats:
 						            1)) * Fraction(2, columns)
 						if size != QUESTION_SIZE:
 							override = r'\fs%s' % number(size * 13)
+					text = tidy_ass(r'{\pos(%s,%s)%s}%s' %
+					                (number(box.center.x * 13), number(y * 13),
+					                 override, text), 'MS PGothic')
 					chars['MS PGothic'].update(text.replace(r'\N', '').replace(r'\h', '\xa0'))
-					print(r'Dialogue: 1,%s,%s,v,,0,0,0,,{\pos(%s,%s)%s}%s' %
-					      (time(chat.vstart), time(chat.vote_vend),
-					       number(box.center.x * 13), number(y * 13),
-					       override, text))
+					print('Dialogue: 1,%s,%s,v,,0,0,0,,%s' %
+					      (time(chat.vstart), time(chat.vote_vend), text))
 					if percentage is not None:
 						override = ''
 						if PASS == 2:
