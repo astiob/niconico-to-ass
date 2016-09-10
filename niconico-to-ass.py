@@ -98,10 +98,11 @@ def time(s):
 	return '%d:%02d:%02d.%02d' % (h, m, s, cs)
 
 def color(color):
-	return '&H%02X%02X%02X' % (color & 0xff, color >> 8 & 0xff, color >> 16)
+	color = (color & 0xff) << 16 | color & 0xff00 | color >> 16
+	return '%X' % color
 
 def alpha(alpha):
-	return '&H%02X' % round((1 - alpha) * 255)
+	return '%X' % round((1 - alpha) * 255)
 
 def number(x):
 	if int(x) == x:
@@ -172,10 +173,9 @@ class HTMLTranscoder(HTMLParser):
 			# 		self.ass.append(r'{\fn%s}' % attrs['face'])
 			# 		del attrs['face']
 			if 'color' in attrs:
-				color = attrs['color']
-				if re.match(r'^#[0-9A-Fa-f]{6}$', color):
-					color = color[5:7] + color[3:5] + color[1:3]
-					self.ass.append(r'{\c%s}' % color)
+				if re.match(r'^#[0-9A-Fa-f]{6}$', attrs['color']):
+					value = int(attrs['color'][1:], 16)
+					self.ass.append(r'{\c%s}' % color(value))
 					del attrs['color']
 			if attrs:
 				self._unsupported()
@@ -1078,8 +1078,8 @@ WrapStyle: 2
 
 [V4+ Styles]
 Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding
-Style: a,Arial,{ARIAL_SIZE},&H00FFFFFF,0,&H77000000,0,-1,0,0,0,100,100,0,0,1,13,0,8,0,0,0,1
-Style: g,MS PGothic,{MS_PGOTHIC_SIZE},&H00FFFFFF,0,&H77000000,0,-1,0,0,0,100,100,0,0,1,13,0,8,0,0,0,1
+Style: a,Arial,{ARIAL_SIZE},&HFFFFFF,0,&H77000000,0,-1,0,0,0,100,100,0,0,1,13,0,8,0,0,0,1
+Style: g,MS PGothic,{MS_PGOTHIC_SIZE},&HFFFFFF,0,&H77000000,0,-1,0,0,0,100,100,0,0,1,13,0,8,0,0,0,1
 Style: v,MS PGothic,{QUESTION_SIZE},&H4DFFFFFF,0,&HA0000000,0,0,0,0,0,100,100,0,0,1,13,0,5,0,0,0,1
 Style: p,MS PGothic,{MS_PGOTHIC_SIZE},&H4D00FFFF,0,&HA0000000,0,0,0,0,0,100,100,0,0,1,13,0,2,0,0,0,1
 Style: y,MS PGothic,{MS_PGOTHIC_SIZE},&H66FFFFFF,0,0,0,0,0,0,0,{YUGI_SCALE},{YUGI_SCALE},0,0,1,0,0,4,0,0,0,1
