@@ -90,6 +90,42 @@ assert PASS in {0, 1, 2}
 def randint(a, b):
 	return round(float(b - a) * random.random() + float(a))
 
+def time(s):
+	cs = round(max(s, 0) * 100)
+	s, cs = divmod(cs, 100)
+	m, s = divmod(s, 60)
+	h, m = divmod(m, 60)
+	return '%d:%02d:%02d.%02d' % (h, m, s, cs)
+
+def color(color):
+	return '&H%02X%02X%02X' % (color & 0xff, color >> 8 & 0xff, color >> 16)
+
+def alpha(alpha):
+	return '&H%02X' % round((1 - alpha) * 255)
+
+def number(x):
+	if int(x) == x:
+		return str(int(x))
+	if isinstance(x, Decimal):
+		s = str(x)
+	else:
+		s = str(float(x))
+	mant, *exp = s.lower().split('e', 1)
+	if exp:
+		exp = int(exp[0])
+	if not exp:
+		return mant.rstrip('0')
+	i, *f = mant.split('.', 1)
+	f = f[0] if f else ''
+	if exp >= len(f):
+		return i + f + '0' * (exp - len(f))
+	elif exp > 0:
+		return i + f[:exp] + '.' + f[exp:]
+	elif exp > -len(i):
+		return i[:exp] + '.' + i[exp:] + f.rstrip('0')
+	else:
+		return '0.' + '0' * (-exp - len(i)) + i + f.rstrip('0')
+
 def escape(text):
 	# Break accidental escape sequences by inserting a zero-width space
 	return re.sub(r'\\([Nnh{}])', '\\\u200b\\1', text)
@@ -484,42 +520,6 @@ else:
 					if chat.mode == 'showresult':
 						chat.percentage_sizes.append(tuple(map(Fraction,
 							bounds.readline().split()[1:])))
-
-def time(s):
-	cs = round(max(s, 0) * 100)
-	s, cs = divmod(cs, 100)
-	m, s = divmod(s, 60)
-	h, m = divmod(m, 60)
-	return '%d:%02d:%02d.%02d' % (h, m, s, cs)
-
-def color(color):
-	return '&H%02X%02X%02X' % (color & 0xff, color >> 8 & 0xff, color >> 16)
-
-def alpha(alpha):
-	return '&H%02X' % round((1 - alpha) * 255)
-
-def number(x):
-	if int(x) == x:
-		return str(int(x))
-	if isinstance(x, Decimal):
-		s = str(x)
-	else:
-		s = str(float(x))
-	mant, *exp = s.lower().split('e', 1)
-	if exp:
-		exp = int(exp[0])
-	if not exp:
-		return mant.rstrip('0')
-	i, *f = mant.split('.', 1)
-	f = f[0] if f else ''
-	if exp >= len(f):
-		return i + f + '0' * (exp - len(f))
-	elif exp > 0:
-		return i + f[:exp] + '.' + f[exp:]
-	elif exp > -len(i):
-		return i[:exp] + '.' + i[exp:] + f.rstrip('0')
-	else:
-		return '0.' + '0' * (-exp - len(i)) + i + f.rstrip('0')
 
 Point = namedtuple('Point', ('x', 'y'))
 
