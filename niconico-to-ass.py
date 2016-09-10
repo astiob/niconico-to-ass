@@ -1242,7 +1242,7 @@ for chat in chats:
 		if font is not extra_font:
 			if style is not None:
 				override = r'\r' + style
-				size = SIZE
+				size = sizes[SIZE]['fs']
 			else:
 				override = r'\fn' + font_name
 			if sizes[chat.size]['fs'] != size:
