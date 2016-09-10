@@ -1055,6 +1055,7 @@ FONTS = OrderedDict((
 
 SIZE = 24
 COLOR = 0xffffff
+BORDER_ALPHA = Fraction(8, 15)
 BORDER_COLOR = 0x000000
 WIDTH = 672
 HEIGHT = 378
@@ -1336,7 +1337,9 @@ for chat in chats:
 		                 (number(WIDTH * 13 / 2), number(y * 13)))
 	
 	if chat.alpha * 510 < 509:
-		overrides.append(r'\alpha%s' % alpha(chat.alpha))
+		overrides.append(r'\1a%s' % alpha(chat.alpha))
+	if alpha(chat.alpha * BORDER_ALPHA) != alpha(BORDER_ALPHA):
+		overrides.append(r'\3a%s' % alpha(chat.alpha * BORDER_ALPHA))
 	
 	savings = {'a': 0, 'g': 0}
 	for term in text:
