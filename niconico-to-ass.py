@@ -1255,6 +1255,7 @@ for chat in chats:
 		c = match.group()
 		if c == r'\{':
 			font_name = 'Arial'
+			chars[font_name].add('{')
 		# Variation Selectors block
 		elif 0xFE00 <= ord(c) <= 0xFE0F:
 			if font is None:
@@ -1272,6 +1273,7 @@ for chat in chats:
 				pass
 			else:
 				font_name = 'Arial'
+			chars[font_name].add(c)
 		else:
 			for font_name, (style, extra_font, sizes) in FONTS.items():
 				if extra_font.get_char_index(c):
@@ -1323,14 +1325,15 @@ for chat in chats:
 			braces = True
 		text.append(c)
 		ascender = max(ascender, sizes[chat.size]['asc'])
-	if PASS == 0:
-		continue
 	if problematic_braces:
 		if 'braces' not in unsupported:
 			print('This file contains "{" in comments before font changes '
 			      'or before "}". They will appear as "\\" in VSFilter.',
 			      file=sys.stderr)
 			unsupported.add('braces')
+		chars['Arial'].add('\\')
+	if PASS == 0:
+		continue
 	for i in range(len(text) - 1, -1, -1):
 		if text[i].endswith('}'):
 			break
