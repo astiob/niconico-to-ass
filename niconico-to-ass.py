@@ -183,11 +183,11 @@ class HTMLTranscoder(HTMLParser):
 			self._unsupported()
 	def handle_endtag(self, tag):
 		if tag == 'b':
-			self.ass.append(r'{\b0}')
+			self.ass.append(r'{\b}')
 		elif tag == 'i':
-			self.ass.append(r'{\i0}')
+			self.ass.append(r'{\i}')
 		elif tag == 'u':
-			self.ass.append(r'{\u0}')
+			self.ass.append(r'{\u}')
 		elif tag == 'a':
 			pass
 		elif tag == 'font':
