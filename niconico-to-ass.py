@@ -1198,11 +1198,51 @@ for chat in chats:
 	
 	overrides = []
 	
-	if chat.color != COLOR:
-		overrides.append(r'\c%s' % color(chat.color))
-	
-	if chat.border_color != BORDER_COLOR:
-		overrides.append(r'\3c%s' % color(chat.border_color))
+	chat.height = LINE_HEIGHT[chat.size]
+	if chat.valign == 'bottom':
+		chat.y = HEIGHT - chat.height
+	else:
+		chat.y = 0
+	if PASS == 2:
+		overflow = False
+		changed = True
+		previous_chats = set()
+		for vpos in range(math.floor(chat.vstart), math.ceil(chat.vend)):
+			previous_chats |= tree[vpos]
+		while changed:
+			changed = False
+			for previous_chat in previous_chats:
+				if (chat.valign == 'normal') != (previous_chat.valign == 'normal'):
+					continue
+				if not (chat.y + chat.height > previous_chat.y and
+				        previous_chat.y + previous_chat.height > chat.y):
+					continue
+				vstart = max(chat.vstart, previous_chat.vstart)
+				vend = min(chat.vend, previous_chat.vend)
+				if vstart >= vend:
+					continue
+				xstart = chat.x(vstart)
+				xend = chat.x(vend)
+				previous_xstart = previous_chat.x(vstart)
+				previous_xend = previous_chat.x(vend)
+				if not ((xstart + chat.width > previous_xstart and
+				         previous_xstart + previous_chat.width > xstart) or
+				        (xend + chat.width > previous_xend and
+				         previous_xend + previous_chat.width > xend)):
+					continue
+				if chat.valign == 'bottom':
+					chat.y = previous_chat.y - chat.height - 1
+				else:
+					chat.y = previous_chat.y + previous_chat.height + 1
+				if chat.y + chat.height > HEIGHT:
+					overflow = True
+					break
+				changed = True
+				break
+		if overflow:
+			chat.alpha = DANMAKU_ALPHA
+			chat.y = chat.random_y()
+		tree.add(chat)
 	
 	font = None
 	size = None
@@ -1244,8 +1284,26 @@ for chat in chats:
 			if style is not None:
 				override = r'\r' + style
 				size = sizes[SIZE]['fs']
+				if chat.color != COLOR:
+					override += r'\c%s' % color(chat.color)
+				if chat.border_color != BORDER_COLOR:
+					override += r'\3c%s' % color(chat.border_color)
+				if chat.alpha * 510 < 509:
+					override += r'\1a%s' % alpha(chat.alpha)
+				if alpha(chat.alpha * BORDER_ALPHA) != alpha(BORDER_ALPHA):
+					override += r'\3a%s' % alpha(chat.alpha * BORDER_ALPHA)
 			else:
-				override = r'\fn' + font_name
+				override = ''
+				if font is None:
+					if chat.color != COLOR:
+						override += r'\c%s' % color(chat.color)
+					if chat.border_color != BORDER_COLOR:
+						override += r'\3c%s' % color(chat.border_color)
+					if chat.alpha * 510 < 509:
+						override += r'\1a%s' % alpha(chat.alpha)
+					if alpha(chat.alpha * BORDER_ALPHA) != alpha(BORDER_ALPHA):
+						override += r'\3a%s' % alpha(chat.alpha * BORDER_ALPHA)
+				override += r'\fn' + font_name
 			if sizes[chat.size]['fs'] != size:
 				override += r'\fs%s' % number(sizes[chat.size]['fs'] * 13)
 			size = sizes[chat.size]['fs']
@@ -1273,51 +1331,6 @@ for chat in chats:
 			if text[i] == '{':
 				text[i] = r'\{{}'
 	
-	chat.height = LINE_HEIGHT[chat.size]
-	if chat.valign == 'bottom':
-		chat.y = HEIGHT - chat.height
-	else:
-		chat.y = 0
-	if PASS != 1:
-		overflow = False
-		changed = True
-		previous_chats = set()
-		for vpos in range(math.floor(chat.vstart), math.ceil(chat.vend)):
-			previous_chats |= tree[vpos]
-		while changed:
-			changed = False
-			for previous_chat in previous_chats:
-				if (chat.valign == 'normal') != (previous_chat.valign == 'normal'):
-					continue
-				if not (chat.y + chat.height > previous_chat.y and
-				        previous_chat.y + previous_chat.height > chat.y):
-					continue
-				vstart = max(chat.vstart, previous_chat.vstart)
-				vend = min(chat.vend, previous_chat.vend)
-				if vstart >= vend:
-					continue
-				xstart = chat.x(vstart)
-				xend = chat.x(vend)
-				previous_xstart = previous_chat.x(vstart)
-				previous_xend = previous_chat.x(vend)
-				if not ((xstart + chat.width > previous_xstart and
-				         previous_xstart + previous_chat.width > xstart) or
-				        (xend + chat.width > previous_xend and
-				         previous_xend + previous_chat.width > xend)):
-					continue
-				if chat.valign == 'bottom':
-					chat.y = previous_chat.y - chat.height - 1
-				else:
-					chat.y = previous_chat.y + previous_chat.height + 1
-				if chat.y + chat.height > HEIGHT:
-					overflow = True
-					break
-				changed = True
-				break
-		if overflow:
-			chat.alpha = DANMAKU_ALPHA
-			chat.y = chat.random_y()
-		tree.add(chat)
 	# Place the baseline where it should be
 	y = chat.y + ASCENDER[chat.size] - ascender
 	if chat.valign == 'normal':
@@ -1335,11 +1348,6 @@ for chat in chats:
 	else:
 		overrides.append(r'\pos(%s,%s)' %
 		                 (number(WIDTH * 13 / 2), number(y * 13)))
-	
-	if chat.alpha * 510 < 509:
-		overrides.append(r'\1a%s' % alpha(chat.alpha))
-	if alpha(chat.alpha * BORDER_ALPHA) != alpha(BORDER_ALPHA):
-		overrides.append(r'\3a%s' % alpha(chat.alpha * BORDER_ALPHA))
 	
 	savings = {'a': 0, 'g': 0}
 	for term in text:
