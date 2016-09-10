@@ -129,7 +129,10 @@ def number(x):
 
 def escape(text):
 	# Break accidental escape sequences by inserting a zero-width space
-	return re.sub(r'\\([Nnh{}])', '\\\u200b\\1', text)
+	text = re.sub(r'\\([Nnh{}])', '\\\u200b\\1', text)
+	# Prevent accidental override tags
+	text = text.replace('{', r'\{{}')
+	return text
 
 class HTMLTranscoder(HTMLParser):
 	def __init__(self):
@@ -1249,9 +1252,12 @@ for chat in chats:
 	text = []
 	braces = problematic_braces = False
 	ascender = 0
-	for c in chat.text:
+	for match in re.finditer(r'(?s)\\\{|.', chat.text):
+		c = match.group()
+		if c == r'\{':
+			font_name = 'Arial'
 		# Variation Selectors block
-		if 0xFE00 <= ord(c) <= 0xFE0F:
+		elif 0xFE00 <= ord(c) <= 0xFE0F:
 			if font is None:
 				if 'lone' not in unsupported:
 					print('This file contains lone characters without '
@@ -1312,7 +1318,7 @@ for chat in chats:
 			text.append('{%s}' % override)
 			problematic_braces |= braces
 			font = extra_font
-		if c == '{':
+		if c == r'\{':
 			braces = True
 		text.append(c)
 		ascender = max(ascender, sizes[chat.size]['asc'])
@@ -1324,12 +1330,11 @@ for chat in chats:
 			      'changes. They will appear as "\\" in VSFilter.',
 			      file=sys.stderr)
 			unsupported.add('braces')
-		for i in range(len(text) - 1, -1, -1):
-			if len(text[i]) > 1:
-				break
-		for i in range(i - 1, -1, -1):
-			if text[i] == '{':
-				text[i] = r'\{{}'
+	for i in range(len(text) - 1, -1, -1):
+		if text[i].endswith('}'):
+			break
+		elif text[i] == r'\{':
+			text[i] = '{'
 	
 	# Place the baseline where it should be
 	y = chat.y + ASCENDER[chat.size] - ascender
