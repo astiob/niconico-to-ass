@@ -391,7 +391,8 @@ class Chat:
 			self.border_color = 0x000000 if self.color else 0xffffff
 		self.vstart = self.vpos
 		if self.yugi:
-			if not self.resume and ('se1' in mail or 'se2' in mail):
+			if not self.resume and (mail is not None and
+			                        ('se1' in mail or 'se2' in mail)):
 				if 'commands' not in unsupported:
 					print('This file contains commands that I cannot handle.',
 					      file=sys.stderr)
