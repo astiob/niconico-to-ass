@@ -79,7 +79,7 @@ unsupported_commands = set()
 
 # This is the time the video stream starts, extracted from the FLV filename
 START_TIME = round(Fraction(datetime(2017, 1, 10, 20, 40, 10, 90000, tzinfo=pytz.timezone('Asia/Tokyo')).timestamp()), 6)
-PASS = 2
+PASS = 2  # when running pass 1, don't forget -vf dsize=672:378
 
 assert PASS in {0, 1, 2}
 
@@ -1094,6 +1094,7 @@ QUESTION_HORIZONTAL_PADDING = 6
 QUESTION_MIN_SIZE = 24
 QUESTION_MAX_SIZE = 36
 QUESTION_SIZE = QUESTION_MAX_SIZE if PASS <= 1 else QUESTION_MIN_SIZE * Fraction(2, 3)
+YUGI_HEIGHT = 56
 YUGI_SCALE = 100 if PASS <= 1 else 99
 
 print('''[Script Info]
@@ -1140,11 +1141,14 @@ for chat in chats:
 			chat.vstart, chat.vend = 0, 10
 		if chat.command == 'perm' or chat.text:
 			# FIXME: go from hardcoded sizes and coordinates to honoring WIDTH and HEIGHT
-			print(r'Dialogue: 2,%s,%s,b,,0,0,0,,{\pos(4368,364)\p1}m 0 0 l 8736 0 8736 728 0 728' %
-			      (time(chat.vstart), time(chat.vend)))
-			# print(r'Dialogue: 2,%s,%s,m,,0,0,0,,{\pos(336,28)\p21}m 0 0 l 1405091840 0 1405091840 112923569 0 112923569' %
-			print(r'Dialogue: 2,%s,%s,m,,0,0,0,,{\pos(4368,364)\p1}m 0 0 l 8710 0 8710 700 0 700' %
-			      (time(chat.vstart), time(chat.vend)))
+			print(r'Dialogue: 2,%s,%s,b,,0,0,0,,{\pos(%s,%s)\p1}m 0 0 l %d 0 %d %d 0 %d' %
+			      (time(chat.vstart), time(chat.vend),
+			       number(WIDTH * 13 / 2), number(YUGI_HEIGHT * 13 / 2),
+			       WIDTH * 13, WIDTH * 13,
+			       round(YUGI_HEIGHT * 13), round(YUGI_HEIGHT * 13)))
+			print(r'Dialogue: 2,%s,%s,m,,0,0,0,,{\pos(%s,%s)\p1}m 0 0 l 8710 0 8710 700 0 700' %
+			      (time(chat.vstart), time(chat.vend),
+			       number(WIDTH * 13 / 2), number(YUGI_HEIGHT * 13 / 2)))
 			scale = min(672 / chat.width, 56 / chat.height, 1) - Fraction('0.01')
 			override = r'\pos(%s,364)' % number((672 - chat.width * scale) * 13 / 2)
 			if scale != Fraction('0.99'):
