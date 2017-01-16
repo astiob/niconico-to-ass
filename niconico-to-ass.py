@@ -77,8 +77,8 @@ args = parser.parse_args()
 unsupported = set()
 unsupported_commands = set()
 
-# This is the time the gate is opened
-START_TIME = int(datetime(2016, 2, 11, 21, 50, tzinfo=pytz.timezone('Asia/Tokyo')).timestamp())
+# This is the time the video stream starts, extracted from the FLV filename
+START_TIME = round(Fraction(datetime(2017, 1, 10, 20, 40, 10, 90000, tzinfo=pytz.timezone('Asia/Tokyo')).timestamp()), 6)
 PASS = 2
 
 assert PASS in {0, 1, 2}
